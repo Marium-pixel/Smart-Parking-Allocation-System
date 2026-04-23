@@ -74,6 +74,8 @@ int main() {
     // Cleanup
     sem_destroy(&parking_sem);
     pthread_mutex_destroy(&lot_mutex);
-
+    pthread_mutex_destroy(&queue_mutex);
+    pthread_cond_destroy(&slot_available);
     return 0;
 }
+
