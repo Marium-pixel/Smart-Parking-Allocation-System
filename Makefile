@@ -1,12 +1,10 @@
 CC = gcc
-CFLAGS = -Wall -g -Isrc
-LIBS = -lpthread -lm
+CFLAGS = -Wall -pthread
+TARGET = smart_parking
+SRCS = src/main.c src/vehicle.c src/semaphore_logic.c
 
-SRC = src/main.c src/vehicle.c src/semaphore_logic.c
-OUT = smart_parking
-
-all:
-	$(CC) $(CFLAGS) $(SRC) -o $(OUT) $(LIBS)
+$(TARGET): $(SRCS)
+	$(CC) $(CFLAGS) -o $(TARGET) $(SRCS)
 
 clean:
-	rm -f $(OUT)
+	rm -f $(TARGET)
