@@ -10,10 +10,10 @@
 #include <string.h>
 
 // Configuration
-#define MAX_SLOTS 5        // total parking slots
+#define MAX_SLOTS 6       // total parking slots
 #define MAX_VEHICLES 15    // total vehicles to simulate
-#define PARK_TIME_MIN 1    // min seconds a vehicle stays
-#define PARK_TIME_MAX 4    // max seconds a vehicle stays
+#define PARK_TIME_MIN 3    // min seconds a vehicle stays
+#define PARK_TIME_MAX 6    // max seconds a vehicle stays
 #define TIMEOUT_SECONDS 8  // max wait time before vehicle leaves
 
 // Vehicle types
@@ -70,6 +70,7 @@ extern int log_count;
 extern int total_parked;
 extern int total_waiting;
 extern int total_timeout;
+extern volatile int simulation_running;
 
 // Sync primitives — Armeen initializes mutex, you initialize semaphore
 extern sem_t parking_sem;
@@ -90,6 +91,6 @@ void  enqueue_vehicle(int vehicle_id, int vehicle_type);
 int   dequeue_vehicle();   // returns vehicle_id of next in line, -1 if empty
 int   is_my_turn(int vehicle_id);
 void  init_semaphore();    // already exists, keep it
-int wait_for_slot(Vehicle v);
-void release_slot(void);
+//int wait_for_slot(Vehicle *v);
+//void release_slot(void);
 #endif
