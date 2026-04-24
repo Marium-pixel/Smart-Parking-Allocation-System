@@ -49,47 +49,66 @@ void park(Vehicle* v, int slot_id) {
 
     log_event(v->vehicle_id, slot_id, "PARKED");
 
-    printf("[VEHICLE %d] parked in slot %d\n",
-           v->vehicle_id, slot_id);
+printf("[VEHICLE %2d] (%-7s) parked in slot %d. Staying for %d seconds.\n",
+    v->vehicle_id,
+    v->vehicle_type == VIP ? "VIP" : "Regular",
+    slot_id,
+    v->park_duration);
 
     sleep(v->park_duration);
 }
 
 void leave(Vehicle* v, int slot_id) {
     pthread_mutex_lock(&lot_mutex);
-
-    parking_lot[slot_id].status = SLOT_FREE;
+    parking_lot[slot_id].status     = SLOT_FREE;
     parking_lot[slot_id].vehicle_id = -1;
-
     total_parked--;
-
     pthread_mutex_unlock(&lot_mutex);
 
     log_event(v->vehicle_id, slot_id, "LEFT");
-
-    printf("[VEHICLE %d] left slot %d\n",
-           v->vehicle_id, slot_id);
+    printf("[VEHICLE %2d] (%-7s) left slot %d.\n",
+        v->vehicle_id,
+        v->vehicle_type == VIP ? "VIP" : "Regular",
+        slot_id);
 }
 
 void* vehicle_thread(void* arg) {
     Vehicle* v = (Vehicle*)arg;
 
+    if (!simulation_running) return NULL;   // guard for clean shutdown
     arrive(v);
+    if (!simulation_running) return NULL;
 
     if (wait_for_slot(v) == 0)
         return NULL;
 
-    int slot_id = find_free_slot();
-
-    if (slot_id == -1) {
-        release_slot();
-        return NULL;
-    }
-
-    park(v, slot_id);
-    leave(v, slot_id);
-
+    // Find and claim slot atomically under mutex
+pthread_mutex_lock(&lot_mutex);
+int slot_id = find_free_slot();
+if (slot_id == -1) {
+    total_waiting--;           // ← fix inflated waiting count
+    pthread_mutex_unlock(&lot_mutex);
     release_slot();
+    return NULL;
+}
 
+    // Reserve immediately while still locked
+    parking_lot[slot_id].status       = SLOT_OCCUPIED;
+    parking_lot[slot_id].vehicle_id   = v->vehicle_id;
+    parking_lot[slot_id].vehicle_type = v->vehicle_type;
+    total_parked++;
+    total_waiting--;
+    pthread_mutex_unlock(&lot_mutex);
+
+    log_event(v->vehicle_id, slot_id, "PARKED");
+    printf("[VEHICLE %2d] (%-7s) parked in slot %d. Staying for %d seconds.\n",
+        v->vehicle_id,
+        v->vehicle_type == VIP ? "VIP" : "Regular",
+        slot_id,
+        v->park_duration);
+
+    sleep(v->park_duration);
+    leave(v, slot_id);
+    release_slot();
     return NULL;
 }
