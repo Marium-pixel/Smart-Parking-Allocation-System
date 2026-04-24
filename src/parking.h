@@ -91,6 +91,6 @@ void  enqueue_vehicle(int vehicle_id, int vehicle_type);
 int   dequeue_vehicle();   // returns vehicle_id of next in line, -1 if empty
 int   is_my_turn(int vehicle_id);
 void  init_semaphore();    // already exists, keep it
-//int wait_for_slot(Vehicle *v);
-//void release_slot(void);
+int wait_for_slot(Vehicle *v);
+void release_slot(void);
 #endif
