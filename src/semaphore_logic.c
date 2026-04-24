@@ -9,23 +9,26 @@ void init_semaphore() {
 // enqueue helper
 static void enqueue_locked(int id, int type) {
     QNode* node = malloc(sizeof(QNode));
-    node->vehicle_id = id;
+    node->vehicle_id   = id;
     node->vehicle_type = type;
-    node->next = NULL;
+    node->next         = NULL;
 
     if (type == VIP && wait_queue.front != NULL) {
-        node->next = wait_queue.front;
+        node->next       = wait_queue.front;
         wait_queue.front = node;
     } else {
         if (!wait_queue.rear)
             wait_queue.front = node;
         else
             wait_queue.rear->next = node;
-
         wait_queue.rear = node;
     }
-
     wait_queue.size++;
+
+    printf("[QUEUE ] Vehicle %2d (%-7s) joined queue. Queue size: %d\n",
+        id,
+        type == VIP ? "VIP" : "Regular",
+        wait_queue.size);
 }
 
 int is_my_turn(int vehicle_id) {
@@ -70,22 +73,27 @@ int wait_for_slot(Vehicle* v) {
         );
 
         if (rc == ETIMEDOUT) {
-            remove_from_queue(v->vehicle_id);
-            pthread_mutex_unlock(&queue_mutex);
-
-            pthread_mutex_lock(&lot_mutex);
-            total_timeout++;
-            total_waiting--;
-            pthread_mutex_unlock(&lot_mutex);
-
-            return 0;
-        }
-    }
-
     remove_from_queue(v->vehicle_id);
     pthread_mutex_unlock(&queue_mutex);
+    pthread_mutex_lock(&lot_mutex);
+    total_timeout++;
+    total_waiting--;
+    pthread_mutex_unlock(&lot_mutex);
+    log_event(v->vehicle_id, -1, "TIMEOUT");   // ← add this
+    printf("[VEHICLE %2d] Timed out! Leaving.\n", v->vehicle_id);
+    return 0;
+}
+    }
+remove_from_queue(v->vehicle_id);
+pthread_mutex_unlock(&queue_mutex);
 
-    sem_wait(&parking_sem);
+// Poll semaphore so shutdown signal is not missed
+while (sem_trywait(&parking_sem) != 0) {
+    if (!simulation_running) return 0;
+    usleep(50000);   // 50ms between retries
+}
+return 1;
+return 1;
     return 1;
 }
 
