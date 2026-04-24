@@ -43,7 +43,7 @@
 
 // ─── Continuous simulation ────────────────────────────────────────────────────
 // Declare as extern volatile int in parking.h so vehicle_thread() can read it
-volatile int simulation_running = 1;
+
 
 static int next_vehicle_id = 1;
 
@@ -79,8 +79,9 @@ static void spawn_wave(int wave_num) {
     for (int i = 0; i < MAX_VEHICLES; i++) {
         int slot = threads_launched % MAX_ACTIVE_THREADS;
 
-        // Detach old thread occupying this slot (if any); it's done by now
-        pthread_detach(active_threads[slot]);
+        // Only detach if this slot was previously used
+        if (threads_launched >= MAX_ACTIVE_THREADS)
+            pthread_detach(active_threads[slot]);
 
         active_vehicles[slot].vehicle_id    = next_vehicle_id++;
         active_vehicles[slot].vehicle_type  = (next_vehicle_id % 4 == 0) ? VIP : REGULAR;
@@ -113,6 +114,7 @@ void init_parking_lot(void) {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 int main(void) {
     srand((unsigned)time(NULL));
+    memset(active_threads, 0, sizeof(active_threads));  
     printf("========== SMART PARKING SYSTEM ==========\n");
     printf("[SYSTEM] Close the window or press ESC to stop.\n\n");
 
