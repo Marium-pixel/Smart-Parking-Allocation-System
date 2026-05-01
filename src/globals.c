@@ -10,9 +10,6 @@ int total_parked = 0;
 int total_waiting = 0;
 int total_timeout = 0;
 
-// ───── Simulation Control ─────
-volatile int simulation_running = 1;    
-
 // ───── Sync Primitives ─────
 sem_t parking_sem;
 pthread_mutex_t lot_mutex = PTHREAD_MUTEX_INITIALIZER;
