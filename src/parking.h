@@ -83,7 +83,7 @@ extern pthread_cond_t  slot_available;  // signals when a slot is freed
 // Function declarations
 void* vehicle_thread(void* arg);
 void  arrive(Vehicle* v);
-void  park(Vehicle* v, int slot_id);
+int   park(Vehicle* v);
 void  leave(Vehicle* v, int slot_id);
 void  log_event(int vehicle_id, int slot_id, const char* action);
 int   find_free_slot();
@@ -91,6 +91,6 @@ void  enqueue_vehicle(int vehicle_id, int vehicle_type);
 int   dequeue_vehicle();   // returns vehicle_id of next in line, -1 if empty
 int   is_my_turn(int vehicle_id);
 void  init_semaphore();    // already exists, keep it
-int wait_for_slot(Vehicle *v);
-void release_slot(void);
+int   wait_for_slot(Vehicle *v);
+void  release_slot(void);
 #endif
